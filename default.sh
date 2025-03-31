@@ -71,9 +71,9 @@ function provisioning_start() {
         "${COMFYUI_DIR}/models/esrgan" \
         "${ESRGAN_MODELS[@]}"
 
-    #################################################################
-    #      CUSTOM STEP: Overwrite models & custom_nodes from GDrive
-    #################################################################
+    ######################################################
+    # CUSTOM STEP: Overwrite models & custom_nodes
+    ######################################################
     apt update && apt install -y python3-pip tar
     pip install gdown
 
@@ -83,17 +83,52 @@ function provisioning_start() {
     rm -rf "${COMFYUI_DIR}/custom_nodes"
     rm -rf "${COMFYUI_DIR}/models"
 
-    # Download & extract custom_nodes.tar
-    gdown https://drive.google.com/uc?id=1KdCBjqr7M79cOIqTVvrcCIxEmn2mJypD -O custom_nodes.tar
+    #----------------------------------------------------
+    # 1) Download & extract custom_nodes.tar (same ID as before)
+    #----------------------------------------------------
+    CUSTOM_NODES_ID="1KdCBjqr7M79cOIqTVvrcCIxEmn2mJypD"
+    gdown "https://drive.google.com/uc?id=${CUSTOM_NODES_ID}" -O custom_nodes.tar
     tar -xf custom_nodes.tar -C "${COMFYUI_DIR}/"
     rm custom_nodes.tar
+    echo "✅ Replaced default custom_nodes with yours."
 
-    # Download & extract models.tar
-    gdown https://drive.google.com/uc?id=1MnvPbc5nqCA727tzmNXP9LvdCnq9tVag -O models.tar
+    #----------------------------------------------------
+    # 2) Download & assemble models.tar (split in 11 parts)
+    #----------------------------------------------------
+    # Put each part's GDrive file ID in order
+    MODEL_PART_IDS=(
+      "10ACCPahelzVzJ4A13T0Kj3RZ0Iv7wu_y"
+      "1VAjdm_628lpLPcYXZLmS8vTtIFGAbhrI"
+      "1A7d1t1DVxCNojW_EFg2vhtyAr7CmWvrm"
+      "1WewztStFTTMwOdce5IuUyU3MajP4lLxU"
+      "1ARC7JPOHyUGnAtFhfAFbvwI-CiyEXRCv"
+      "1A4tdZ8ENxmSkD4RFZnTZmRM8s1SVdvvf"
+      "1wKLRHc_KiIfeeX0ncKo0Iyaf3fiPEA3b"
+      "15BBOYKmV2L0WLlprV_Cecg2hy88hLq_w"
+      "1tmBvzbbZQdURqOeOKLHduV_DA8W1vNo1"
+      "160f1bJzpK_nzT8hnb-ObVjNX7_JQpW25"
+      "1clRrxbAx_4pTI0sIU-m6brDhu1ZB6zH0"
+    )
+
+    i=1
+    for ID in "${MODEL_PART_IDS[@]}"; do
+        part_num=$(printf "%03d" $i)  # ensures 001, 002, etc
+        echo "Downloading models.tar.${part_num} from Google Drive..."
+        gdown "https://drive.google.com/uc?id=${ID}" -O "models.tar.${part_num}"
+        ((i++))
+    done
+
+    # Combine all parts into one .tar
+    cat models.tar.0* > models.tar
+
+    # Extract into ComfyUI
     tar -xf models.tar -C "${COMFYUI_DIR}/"
+
+    # Clean up parts
+    rm models.tar.0*
     rm models.tar
 
-    echo "✅ Replaced default models and custom_nodes with yours from Google Drive."
+    echo "✅ Replaced default models with your (11-part) version from Google Drive."
 
     provisioning_print_end
 }
@@ -190,6 +225,7 @@ function provisioning_has_valid_civitai_token() {
 
 # Download from $1 URL to $2 file path
 function provisioning_download() {
+    # If a Hugging Face token is provided, or Civitai token is provided, handle it
     if [[ -n $HF_TOKEN && $1 =~ ^https://([a-zA-Z0-9_-]+\.)?huggingface\.co(/|$|\?) ]]; then
         auth_token="$HF_TOKEN"
     elif [[ -n $CIVITAI_TOKEN && $1 =~ ^https://([a-zA-Z0-9_-]+\.)?civitai\.com(/|$|\?) ]]; then
