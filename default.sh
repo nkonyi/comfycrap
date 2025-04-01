@@ -1,13 +1,15 @@
 #!/bin/bash
 
-# >>> Insert your Civitai token here <<<
+##########################################################
+#      1) Insert your Civitai “API Key” (Token) here     #
+##########################################################
 export CIVITAI_TOKEN="f2433afed972b76cdd473760a6a9ac8e"
+
 
 source /venv/main/bin/activate
 COMFYUI_DIR=${WORKSPACE}/ComfyUI
 
 # Packages are installed after nodes so we can fix them...
-
 APT_PACKAGES=(
     #"package-1"
     #"package-2"
@@ -27,15 +29,22 @@ WORKFLOWS=(
 
 )
 
+##########################################################
+#   2) Add the Lustify Checkpoint + LoRA URL below        #
+##########################################################
 CHECKPOINT_MODELS=(
+    # Example: This was already here
     "https://civitai.com/api/download/models/798204?type=Model&format=SafeTensor&size=full&fp=fp16"
-    "https://civitai.com/api/download/models/123456?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+
+    # Lustify OLT
+    "https://civitai.com/api/download/models/1569593?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 )
 
 UNET_MODELS=(
 )
 
 LORA_MODELS=(
+    # The LoRA link you provided
     "https://orchestration.civitai.com/v1/consumer/jobs/54bc2d8e-24f3-4644-a794-a396ad5343ba/assets/x2x_hq-000009.safetensors"
 )
 
