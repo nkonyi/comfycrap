@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# >>> Insert your Civitai token here <<<
+export CIVITAI_TOKEN="f2433afed972b76cdd473760a6a9ac8e"
+
 source /venv/main/bin/activate
 COMFYUI_DIR=${WORKSPACE}/ComfyUI
 
@@ -50,8 +53,6 @@ function provisioning_start() {
     provisioning_get_apt_packages
     provisioning_get_nodes
     provisioning_get_pip_packages
-
-    # Default model downloads:
     provisioning_get_files \
         "${COMFYUI_DIR}/models/checkpoints" \
         "${CHECKPOINT_MODELS[@]}"
@@ -70,78 +71,18 @@ function provisioning_start() {
     provisioning_get_files \
         "${COMFYUI_DIR}/models/esrgan" \
         "${ESRGAN_MODELS[@]}"
-
-    ######################################################
-    # CUSTOM STEP: Overwrite models & custom_nodes
-    ######################################################
-    apt update && apt install -y python3-pip tar
-    pip install gdown
-
-    cd "${COMFYUI_DIR}"
-
-    # Remove default folders
-    rm -rf "${COMFYUI_DIR}/custom_nodes"
-    rm -rf "${COMFYUI_DIR}/models"
-
-    #----------------------------------------------------
-    # 1) Download & extract custom_nodes.tar (same ID as before)
-    #----------------------------------------------------
-    CUSTOM_NODES_ID="1KdCBjqr7M79cOIqTVvrcCIxEmn2mJypD"
-    gdown "https://drive.google.com/uc?id=${CUSTOM_NODES_ID}" -O custom_nodes.tar
-    tar -xf custom_nodes.tar -C "${COMFYUI_DIR}/"
-    rm custom_nodes.tar
-    echo "✅ Replaced default custom_nodes with yours."
-
-    #----------------------------------------------------
-    # 2) Download & assemble models.tar (split in 11 parts)
-    #----------------------------------------------------
-    # Put each part's GDrive file ID in order
-    MODEL_PART_IDS=(
-      "10ACCPahelzVzJ4A13T0Kj3RZ0Iv7wu_y"
-      "1VAjdm_628lpLPcYXZLmS8vTtIFGAbhrI"
-      "1A7d1t1DVxCNojW_EFg2vhtyAr7CmWvrm"
-      "1WewztStFTTMwOdce5IuUyU3MajP4lLxU"
-      "1ARC7JPOHyUGnAtFhfAFbvwI-CiyEXRCv"
-      "1A4tdZ8ENxmSkD4RFZnTZmRM8s1SVdvvf"
-      "1wKLRHc_KiIfeeX0ncKo0Iyaf3fiPEA3b"
-      "15BBOYKmV2L0WLlprV_Cecg2hy88hLq_w"
-      "1tmBvzbbZQdURqOeOKLHduV_DA8W1vNo1"
-      "160f1bJzpK_nzT8hnb-ObVjNX7_JQpW25"
-      "1clRrxbAx_4pTI0sIU-m6brDhu1ZB6zH0"
-    )
-
-    i=1
-    for ID in "${MODEL_PART_IDS[@]}"; do
-        part_num=$(printf "%03d" $i)  # ensures 001, 002, etc
-        echo "Downloading models.tar.${part_num} from Google Drive..."
-        gdown "https://drive.google.com/uc?id=${ID}" -O "models.tar.${part_num}"
-        ((i++))
-    done
-
-    # Combine all parts into one .tar
-    cat models.tar.0* > models.tar
-
-    # Extract into ComfyUI
-    tar -xf models.tar -C "${COMFYUI_DIR}/"
-
-    # Clean up parts
-    rm models.tar.0*
-    rm models.tar
-
-    echo "✅ Replaced default models with your (11-part) version from Google Drive."
-
     provisioning_print_end
 }
 
 function provisioning_get_apt_packages() {
     if [[ -n $APT_PACKAGES ]]; then
-        sudo $APT_INSTALL ${APT_PACKAGES[@]}
+            sudo $APT_INSTALL ${APT_PACKAGES[@]}
     fi
 }
 
 function provisioning_get_pip_packages() {
     if [[ -n $PIP_PACKAGES ]]; then
-        pip install --no-cache-dir ${PIP_PACKAGES[@]}
+            pip install --no-cache-dir ${PIP_PACKAGES[@]}
     fi
 }
 
@@ -188,7 +129,7 @@ function provisioning_print_header() {
 }
 
 function provisioning_print_end() {
-    printf "\nProvisioning complete: Application will start now\n\n"
+    printf "\nProvisioning complete:  Application will start now\n\n"
 }
 
 function provisioning_has_valid_hf_token() {
@@ -225,14 +166,13 @@ function provisioning_has_valid_civitai_token() {
 
 # Download from $1 URL to $2 file path
 function provisioning_download() {
-    # If a Hugging Face token is provided, or Civitai token is provided, handle it
     if [[ -n $HF_TOKEN && $1 =~ ^https://([a-zA-Z0-9_-]+\.)?huggingface\.co(/|$|\?) ]]; then
         auth_token="$HF_TOKEN"
-    elif [[ -n $CIVITAI_TOKEN && $1 =~ ^https://([a-zA-Z0-9_-]+\.)?civitai\.com(/|$|\?) ]]; then
+    elif 
+        [[ -n $CIVITAI_TOKEN && $1 =~ ^https://([a-zA-Z0-9_-]+\.)?civitai\.com(/|$|\?) ]]; then
         auth_token="$CIVITAI_TOKEN"
     fi
-
-    if [[ -n $auth_token ]]; then
+    if [[ -n $auth_token ]];then
         wget --header="Authorization: Bearer $auth_token" -qnc --content-disposition --show-progress -e dotbytes="${3:-4M}" -P "$2" "$1"
     else
         wget -qnc --content-disposition --show-progress -e dotbytes="${3:-4M}" -P "$2" "$1"
