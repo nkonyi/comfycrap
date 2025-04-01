@@ -29,12 +29,14 @@ WORKFLOWS=(
 
 CHECKPOINT_MODELS=(
     "https://civitai.com/api/download/models/798204?type=Model&format=SafeTensor&size=full&fp=fp16"
+    "https://civitai.com/api/download/models/123456?type=Model&format=SafeTensor&size=pruned&fp=fp16"
 )
 
 UNET_MODELS=(
 )
 
 LORA_MODELS=(
+    "https://orchestration.civitai.com/v1/consumer/jobs/54bc2d8e-24f3-4644-a794-a396ad5343ba/assets/x2x_hq-000009.safetensors"
 )
 
 VAE_MODELS=(
