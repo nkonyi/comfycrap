@@ -3,8 +3,10 @@
 source /venv/main/bin/activate
 COMFYUI_DIR=${WORKSPACE}/ComfyUI
 
-# Packages are installed after nodes so we can fix them...
+# Set your token (using the one you provided)
+CIVITAI_TOKEN="f2433afed972b76cdd473760a6a9ac8e"
 
+# Packages are installed after nodes so we can fix them...
 APT_PACKAGES=(
     #"package-1"
     #"package-2"
@@ -24,21 +26,42 @@ WORKFLOWS=(
 
 )
 
+# CHECKPOINT_MODELS (go to models/checkpoints)
+# For private Civtai files, add a pipe with the output filename.
 CHECKPOINT_MODELS=(
-    "https://civitai.com/api/download/models/798204?type=Model&format=SafeTensor&size=full&fp=fp16"
+    "https://civitai.com/api/download/models/798204?type=Model&format=SafeTensor&size=full&fp=fp16"  # original (if public)
+    "https://civitai.com/api/download/models/1569593?type=Model&format=SafeTensor&size=pruned&fp=fp16|lustifyolt.safetensors"
+    "https://civitai.com/api/download/models/1099200?type=Model&format=SafeTensor&size=pruned&fp=fp16|lustifydmd2.safetensors"
 )
 
+# UNET_MODELS (go to models/unet) – from Hugging Face, assumed public
 UNET_MODELS=(
     "https://huggingface.co/city96/Wan2.1-I2V-14B-720P-gguf/resolve/main/wan2.1-i2v-14b-720p-Q8_0.gguf?download=true"
     "https://huggingface.co/city96/Wan2.1-I2V-14B-480P-gguf/resolve/main/wan2.1-i2v-14b-480p-Q8_0.gguf?download=true"
 )
 
+# LORA_MODELS (go to models/lora) – using private orchestration endpoints; filenames provided after pipe.
 LORA_MODELS=(
-    # (none for now)
+    "https://orchestration.civitai.com/v1/consumer/jobs/1f0963b4-ca04-4e64-9f5e-2621020429be/assets/orph1c.safetensors|orphic20.safetensors"
+    "https://orchestration.civitai.com/v1/consumer/jobs/1f0963b4-ca04-4e64-9f5e-2621020429be/assets/orph1c-000015.safetensors|orphic15.safetensors"
+    "https://orchestration.civitai.com/v1/consumer/jobs/1f0963b4-ca04-4e64-9f5e-2621020429be/assets/orph1c-000012.safetensors|orphic12.safetensors"
+    "https://orchestration.civitai.com/v1/consumer/jobs/54bc2d8e-24f3-4644-a794-a396ad5343ba/assets/x2x_hq-000009.safetensors|x2x.safetensors"
+    "https://orchestration.civitai.com/v1/consumer/jobs/a70b1bfe-7690-4700-9d73-67932f5b6b2b/assets/x3x_v3.safetensors|x3x.safetensors"
 )
 
+# VAE_MODELS (go to models/vae)
 VAE_MODELS=(
     "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors"
+)
+
+# TEXT_ENCODERS_MODELS (go to models/text_encoders)
+TEXT_ENCODERS_MODELS=(
+    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+)
+
+# CLIP_VISION_MODELS (go to models/clip_vision)
+CLIP_VISION_MODELS=(
+    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors"
 )
 
 ESRGAN_MODELS=(
@@ -49,15 +72,6 @@ CONTROLNET_MODELS=(
     # (none for now)
 )
 
-# New arrays for additional directories:
-TEXT_ENCODERS_MODELS=(
-    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
-)
-
-CLIP_VISION_MODELS=(
-    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors"
-)
-
 ### DO NOT EDIT BELOW HERE UNLESS YOU KNOW WHAT YOU ARE DOING ###
 
 function provisioning_start() {
@@ -66,7 +80,7 @@ function provisioning_start() {
     provisioning_get_nodes
     provisioning_get_pip_packages
 
-    # Download models into their respective directories:
+    # Download models into respective directories:
     provisioning_get_files "${COMFYUI_DIR}/models/checkpoints" "${CHECKPOINT_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/unet" "${UNET_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/lora" "${LORA_MODELS[@]}"
@@ -74,14 +88,13 @@ function provisioning_start() {
     provisioning_get_files "${COMFYUI_DIR}/models/vae" "${VAE_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/esrgan" "${ESRGAN_MODELS[@]}"
 
-    # Download models for new directories:
+    # Download models for additional directories:
     provisioning_get_files "${COMFYUI_DIR}/models/text_encoders" "${TEXT_ENCODERS_MODELS[@]}"
     provisioning_get_files "${COMFYUI_DIR}/models/clip_vision" "${CLIP_VISION_MODELS[@]}"
 
-    # Replace custom_nodes with your custom version from Google Drive
+    # Replace default custom_nodes with your custom version from Google Drive
     apt update && apt install -y python3-pip tar
     pip install gdown
-
     cd "${COMFYUI_DIR}"
     rm -rf "${COMFYUI_DIR}/custom_nodes"
     gdown https://drive.google.com/uc?id=1KdCBjqr7M79cOIqTVvrcCIxEmn2mJypD -O custom_nodes.tar
@@ -129,15 +142,14 @@ function provisioning_get_nodes() {
 
 function provisioning_get_files() {
     if [[ -z $2 ]]; then return 1; fi
-    
     dir="$1"
     mkdir -p "$dir"
     shift
     arr=("$@")
     printf "Downloading %s model(s) to %s...\n" "${#arr[@]}" "$dir"
-    for url in "${arr[@]}"; do
-        printf "Downloading: %s\n" "${url}"
-        provisioning_download "${url}" "$dir"
+    for entry in "${arr[@]}"; do
+        printf "Downloading: %s\n" "$entry"
+        provisioning_download "$entry" "$dir"
         printf "\n"
     done
 }
@@ -153,11 +165,9 @@ function provisioning_print_end() {
 function provisioning_has_valid_hf_token() {
     [[ -n "$HF_TOKEN" ]] || return 1
     url="https://huggingface.co/api/whoami-v2"
-
     response=$(curl -o /dev/null -s -w "%{http_code}" -X GET "$url" \
         -H "Authorization: Bearer $HF_TOKEN" \
         -H "Content-Type: application/json")
-
     if [ "$response" -eq 200 ]; then
         return 0
     else
@@ -168,11 +178,9 @@ function provisioning_has_valid_hf_token() {
 function provisioning_has_valid_civitai_token() {
     [[ -n "$CIVITAI_TOKEN" ]] || return 1
     url="https://civitai.com/api/v1/models?hidden=1&limit=1"
-
     response=$(curl -o /dev/null -s -w "%{http_code}" -X GET "$url" \
         -H "Authorization: Bearer $CIVITAI_TOKEN" \
         -H "Content-Type: application/json")
-
     if [ "$response" -eq 200 ]; then
         return 0
     else
@@ -180,17 +188,40 @@ function provisioning_has_valid_civitai_token() {
     fi
 }
 
-# Download from $1 URL to $2 file path
+# Modified download function to support custom filenames and use curl for Civtai URLs.
 function provisioning_download() {
-    if [[ -n $HF_TOKEN && $1 =~ ^https://([a-zA-Z0-9_-]+\.)?huggingface\.co(/|$|\?) ]]; then
-        auth_token="$HF_TOKEN"
-    elif [[ -n $CIVITAI_TOKEN && $1 =~ ^https://([a-zA-Z0-9_-]+\.)?civitai\.com(/|$|\?) ]]; then
-        auth_token="$CIVITAI_TOKEN"
-    fi
-    if [[ -n $auth_token ]]; then
-        wget --header="Authorization: Bearer $auth_token" -qnc --content-disposition --show-progress -e dotbytes="${3:-4M}" -P "$2" "$1"
+    local full_entry="$1"
+    local out_dir="$2"
+    local url filename
+
+    # If the entry contains a pipe, split it.
+    if [[ "$full_entry" == *"|"* ]]; then
+        url=$(echo "$full_entry" | cut -d'|' -f1)
+        filename=$(echo "$full_entry" | cut -d'|' -f2)
     else
-        wget -qnc --content-disposition --show-progress -e dotbytes="${3:-4M}" -P "$2" "$1"
+        url="$full_entry"
+        filename=""
+    fi
+
+    # If the URL is from civitai.com or orchestration.civitai.com, use curl.
+    if [[ "$url" =~ ^https://([a-zA-Z0-9_-]+\.)?(civitai\.com|orchestration\.civitai\.com)(/|$|\?) ]]; then
+        if [[ -n "$filename" ]]; then
+            curl -H "Authorization: Bearer $CIVITAI_TOKEN" -L -o "${out_dir}/${filename}" "$url"
+        else
+            curl -H "Authorization: Bearer $CIVITAI_TOKEN" -L -O "$url" -P "$out_dir"
+        fi
+    elif [[ -n $HF_TOKEN && "$url" =~ ^https://([a-zA-Z0-9_-]+\.)?huggingface\.co(/|$|\?) ]]; then
+        if [[ -n "$filename" ]]; then
+            wget --header="Authorization: Bearer $HF_TOKEN" -qnc --content-disposition --show-progress -O "${out_dir}/${filename}" "$url"
+        else
+            wget --header="Authorization: Bearer $HF_TOKEN" -qnc --content-disposition --show-progress -e dotbytes="${3:-4M}" -P "$out_dir" "$url"
+        fi
+    else
+        if [[ -n "$filename" ]]; then
+            wget -qnc --content-disposition --show-progress -O "${out_dir}/${filename}" "$url"
+        else
+            wget -qnc --content-disposition --show-progress -e dotbytes="${3:-4M}" -P "$out_dir" "$url"
+        fi
     fi
 }
 
