@@ -36,17 +36,19 @@ CHECKPOINT_MODELS=(
 
 # UNET_MODELS (go to models/unet) – from Hugging Face, assumed public
 UNET_MODELS=(
-    "https://huggingface.co/city96/Wan2.1-I2V-14B-720P-gguf/resolve/main/wan2.1-i2v-14b-720p-Q8_0.gguf?download=true"
     "https://huggingface.co/city96/Wan2.1-I2V-14B-480P-gguf/resolve/main/wan2.1-i2v-14b-480p-Q8_0.gguf?download=true"
 )
 
 # LORA_MODELS (go to models/lora) – using private orchestration endpoints; filenames provided after pipe.
 LORA_MODELS=(
-    "https://orchestration.civitai.com/v1/consumer/jobs/1f0963b4-ca04-4e64-9f5e-2621020429be/assets/orph1c.safetensors|orphic20.safetensors"
-    "https://orchestration.civitai.com/v1/consumer/jobs/1f0963b4-ca04-4e64-9f5e-2621020429be/assets/orph1c-000015.safetensors|orphic15.safetensors"
-    "https://orchestration.civitai.com/v1/consumer/jobs/1f0963b4-ca04-4e64-9f5e-2621020429be/assets/orph1c-000012.safetensors|orphic12.safetensors"
-    "https://orchestration.civitai.com/v1/consumer/jobs/54bc2d8e-24f3-4644-a794-a396ad5343ba/assets/x2x_hq-000009.safetensors|x2x.safetensors"
-    "https://orchestration.civitai.com/v1/consumer/jobs/a70b1bfe-7690-4700-9d73-67932f5b6b2b/assets/x3x_v3.safetensors|x3x.safetensors"
+    "https://civitai.com/api/download/models/1475095?type=Model&format=SafeTensor|wan-nsfw.safetensors"
+    "https://civitai.com/api/download/models/1623136?type=Model&format=SafeTensor|wan-missionary.safetensors"
+    "https://civitai.com/api/download/models/1513684?type=Model&format=SafeTensor|wan-bj.safetensors"
+    "https://civitai.com/api/download/models/1514116?type=Model&format=SafeTensor|wan-tittydrop.safetensors"
+    "https://civitai.com/api/download/models/1602715?type=Model&format=SafeTensor|wan-cum.safetensors"
+    "https://civitai.com/api/download/models/1517164?type=Model&format=SafeTensor|wan-bouncy.safetensors"
+    "https://civitai.com/api/download/models/1537915?type=Model&format=SafeTensor|wan-bouncewalk.safetensors"
+    "https://civitai.com/api/download/models/1565668?type=Model&format=SafeTensor|wan-details.safetensors"
 )
 
 # VAE_MODELS (go to models/vae)
